@@ -1,0 +1,52 @@
+---
+title: "Combined Results"
+output: html_document
+date: "2026-11-04"
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+actual <- read.csv('C:/Users/colet/Documents/GEOG5890_Capstone/data/Final_Monthly_Crash_Grid_Table/new/Complete_Grid_Monthly_Data.csv')
+rf <- read.csv('./RF_Model_Denver_Grid_Predictions.csv')
+gb <- read.csv('./GB_Model_Denver_Grid_Predictions.csv')
+xgboost <- read.csv('./XGBoost_Model_Denver_Grid_Predictions.csv')
+```
+
+```{r}
+actual <- actual %>%
+  filter(Year %in% c(2023, 2024))
+```
+
+```{r}
+combined <- left_join(actual, rf, by = join_by(GRID_ID == GRID_ID, Year == Year,
+                                   Month == Month))
+```
+
+```{r}
+combined <- combined %>%
+  select(-CrashCount.y) %>%
+  rename(Actual_Crash_Count = CrashCount.x,
+         RF_Predicted_Crashes = Predicted_Crashes)
+```
+
+```{r}
+combined <- left_join(combined, gb, by = join_by(GRID_ID == GRID_ID, Year == Year,
+                                   Month == Month)) %>%
+  select(-CrashCount) %>%
+  rename(GB_Predicted_Crashes = Predicted_Crashes)
+```
+
+```{r}
+combined <- left_join(combined, xgboost, by = join_by(GRID_ID == GRID_ID,
+                                                      Year == Year,
+                                                      Month == Month)) %>%
+  select(-CrashCount) %>%
+  rename(XGB_Predicted_Crashes = Predicted_Crashes)
+```
+
+```{r}
+write.csv(combined, './Combined_Results.csv')
+```

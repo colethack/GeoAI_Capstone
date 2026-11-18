@@ -1,0 +1,155 @@
+---
+title: "R_combine_new"
+output: html_document
+date: "2026-10-16"
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(terra)
+library(spatstat)
+library(stars)
+library(gstat)
+```
+
+```{r}
+Crash_IDW_2015 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2015_IDW.shp')
+Crash_IDW_2016 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2016_IDW.shp')
+Crash_IDW_2017 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2017_IDW.shp')
+Crash_IDW_2018 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2018_IDW.shp')
+Crash_IDW_2019 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2019_IDW.shp')
+```
+
+```{r}
+tidy_2015 <- Crash_IDW_2015 %>%
+  select(gid, year, month, day, hour, killed, injured, vehicles, latitude, longitude, RASTERVALU)
+
+tidy_2016 <- Crash_IDW_2016 %>%
+  select(gid, year, month, day, hour, killed, injured, vehicles, latitude, longitude, RASTERVALU)
+
+tidy_2017 <- Crash_IDW_2017 %>%
+  select(gid, year, month, day, hour, killed, injured, vehicles, latitude, longitude, RASTERVALU)
+
+tidy_2018 <- Crash_IDW_2018 %>%
+  select(gid, year, month, day, hour, killed, injured, vehicles, latitude, longitude, RASTERVALU)
+
+tidy_2019 <- Crash_IDW_2019 %>%
+  select(gid, year, month, day, hour, killed, injured, vehicles, latitude, longitude, RASTERVALU)
+```
+
+```{r}
+tidy_2015_2019 <- bind_rows(tidy_2015, tidy_2016, tidy_2017, tidy_2018, tidy_2019)
+```
+
+```{r}
+combined_2015_2019 <- tidy_2015_2019 %>%
+  rename(AADT_IDW = RASTERVALU)
+```
+
+```{r}
+st_write(combined_2015_2019, './data/Crash_Data_IDW_Values/Crash_Data_2015_2019.shp')
+```
+
+2020-2024
+
+```{r}
+Crash_IDW_2020 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2020_IDW.shp')
+Crash_IDW_2021 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2021_IDW.shp')
+Crash_IDW_2022 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2022_IDW.shp')
+Crash_IDW_2023 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2023_IDW.shp')
+Crash_IDW_2024 <- st_read('./data/Crash_Data_IDW_Values/Crash_Denver_2024_IDW.shp')
+```
+
+```{r}
+Crash_IDW_2021 <- st_zm(Crash_IDW_2021, drop = TRUE, what = 'ZM')
+Crash_IDW_2020 <- st_zm(Crash_IDW_2020, drop = TRUE, what = 'ZM')
+```
+
+```{r}
+print(Crash_IDW_2021)
+print(Crash_IDW_2020)
+```
+
+```{r}
+tidy_2024 <- Crash_IDW_2024 %>%
+  select(id, latitude, longitude, crashdate, crashtime, numbkilled, numbinjurd, RASTERVALU)
+
+tidy_2023 <- Crash_IDW_2023 %>%
+  select(id, latitude, longitude, crashdate, crashtime, numbkilled, numbinjurd, RASTERVALU)
+
+tidy_2022 <- Crash_IDW_2022 %>%
+  select(id, latitude, longitude, crashdate, crashtime, numbkilled, numbinjurd, RASTERVALU)
+
+tidy_2021 <- Crash_IDW_2021 %>%
+  select(id, latitude, longitude, crashdate, crashtime, numbkilled, numbinjurd, RASTERVALU)
+
+tidy_2020 <- Crash_IDW_2020 %>%
+  select(id, latitude, longitude, crashdate, crashtime, numbkilled, numbinjurd, RASTERVALU)
+```
+
+```{r}
+tidy_2020_2024 <- bind_rows(tidy_2020, tidy_2021, tidy_2022, tidy_2023, tidy_2024)
+```
+
+```{r}
+combined_2020_2024 <- tidy_2020_2024 %>%
+  separate(crashdate, into = c('year', 'month', 'day'), sep ='-', remove = FALSE)%>%
+  select(-crashdate)
+```
+
+```{r}
+combined_2020_2024 <- combined_2020_2024 %>%
+  mutate(hour = gsub(':', '', crashtime)) %>%
+  mutate(hour = substr(hour, 1, nchar(hour) - 2))
+```
+
+```{r}
+combined_2020_2024 <- combined_2020_2024 %>%
+  rename(killed = numbkilled, injured = numbinjurd, AADT_IDW = RASTERVALU,
+         orig_id = id) %>%
+  relocate(orig_id, year, month, day, hour, killed, injured, latitude, longitude,
+           AADT_IDW)
+```
+
+```{r}
+combined_2020_2024 <- combined_2020_2024 %>%
+  select(-crashtime)
+```
+
+```{r}
+st_write(combined_2020_2024, './data/Crash_Data_IDW_Values/Crash_Data_2020_2024.shp')
+```
+
+```{r}
+combined_2020_2024 <- combined_2020_2024 %>%
+  mutate(year = as.numeric(year), month = as.numeric(month), day = as.numeric(day))
+```
+
+```{r}
+combined_2015_2019 <- combined_2015_2019 %>%
+  rename(orig_id = gid)
+```
+
+```{r}
+combined_2015_2019 <- combined_2015_2019 %>%
+  select(-vehicles)
+```
+
+```{r}
+Combined_2015_2024 <- bind_rows(combined_2015_2019, combined_2020_2024)
+```
+
+```{r}
+Combined_2015_2024 <- Combined_2015_2024 %>%
+  mutate(new_id = row_number())
+```
+
+```{r}
+Combined_2015_2024 <- Combined_2015_2024 %>%
+  relocate(new_id)
+```
+
+```{r}
+st_write(Combined_2015_2024, './data/Final_Combined_Shapefile/Crash_Data_2015_2024.shp')
+```

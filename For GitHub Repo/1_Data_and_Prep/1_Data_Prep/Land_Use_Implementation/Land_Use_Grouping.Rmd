@@ -1,0 +1,62 @@
+---
+title: "Land_Use"
+output: html_document
+date: "2026-10-26"
+---
+
+```{r}
+library(sf)
+library(tidyverse)
+```
+
+```{r}
+land_use <- st_read('./Land_Use_2020/PLAN_EXISTINGLANDUSE2020_A.shp')
+```
+
+```{r}
+land_use_classes <- land_use %>%
+  st_drop_geometry() %>%
+  group_by(D_CLASS_CN) %>%
+  summarise(class = n())
+```
+
+```{r}
+land_use_desc <- land_use %>%
+  st_drop_geometry() %>%
+  group_by(CPD_LANDUS) %>%
+  summarise(type = n())
+```
+
+```{r}
+land_use_grouped <- land_use %>%
+  mutate(LU_group = case_when(
+    CPD_LANDUS %in% c('Single-unit Residential',
+                      'single-unit residential',
+                      'Two-unit Residential',
+                      'Multi-unit Residential') ~ 'Residential',
+    
+    CPD_LANDUS %in% c('Commercial/Retail',
+                      'Office') ~ 'Commercial_Office',
+    
+    CPD_LANDUS %in% c('Industrial',
+                      'Trans/Comm/Utilities',
+                      'ROW/Road') ~ 'Industrial_Transport',
+    
+    CPD_LANDUS == 'Mixed-use' ~ 'Mixed_Use',
+    
+    CPD_LANDUS %in% c('Entertainment/Cultural',
+                      'Park/Open Space',
+                      'Public/Quasi-public') ~ 'Public_Cultural_Rec',
+    
+    CPD_LANDUS == 'Parking' ~ 'Parking',
+    
+    CPD_LANDUS %in% c('Vacant',
+                      'Agriculture') ~ "Vacant_Agriculture",
+    
+    TRUE ~ 'Other_Unknown'
+  ))
+```
+
+```{r}
+st_write(land_use_grouped, './Land_Use_2020/Land_Use_Grouped.shp')
+```

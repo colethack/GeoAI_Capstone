@@ -1,0 +1,133 @@
+---
+title: "Final_Capstone_Charts"
+output: html_document
+date: "2026-11-09"
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+data <- read.csv('../final_data/Combined_Results_by_Cell_2023_2024.csv')
+```
+
+```{r}
+data <- data %>%
+  select(GRID_ID, Year, Month, Actual_Crash_Count, RF_Predicted_Crashes,
+         GB_Predicted_Crashes, XGB_Predicted_Crashes)
+```
+
+```{r}
+predicted_data <- data %>%
+  rename(Random_Forest = RF_Predicted_Crashes,
+         Gradient_Boosting = GB_Predicted_Crashes,
+         XGBoost = XGB_Predicted_Crashes,
+         Actual = Actual_Crash_Count) %>%
+  pivot_longer(
+    cols = c(Random_Forest, Gradient_Boosting, XGBoost, Actual),
+    names_to = 'Model',
+    values_to = 'Predicted_Crashes')
+```
+
+```{r}
+dated_data <- predicted_data %>%
+  mutate(YearMonth = make_date(year = Year, month = Month))
+```
+
+```{r}
+data_1957 <- dated_data %>%
+  filter(GRID_ID == 1957)
+```
+
+```{r}
+ggplot(data_1957, aes(x = YearMonth, y = Predicted_Crashes, color = Model)) +
+  geom_line(size = 1.5) +
+  scale_color_manual(values = c('#DCAB6B', '#B48291', '#A5CCD1', '#495159')) +
+  scale_x_date(
+    limits = as.Date(c('2023-01-01', '2024-12-01')),
+    date_breaks = '3 months', date_labels = '%b %Y',
+    expand = expansion(mult = 0.001)) +
+  labs(x = 'Month', y = 'Crash Count') +
+  coord_cartesian(ylim = c(0, 25)) +
+  theme_minimal() +
+  theme(legend.position = 'none') 
+```
+
+```{r}
+data_2033 <- dated_data %>%
+  filter(GRID_ID == 2033)
+```
+
+```{r}
+ggplot(data_2033, aes(x = YearMonth, y = Predicted_Crashes, color = Model)) +
+  geom_line(size = 1.5) +
+  scale_color_manual(values = c('#DCAB6B', '#B48291', '#A5CCD1', '#495159')) +
+  scale_x_date(
+    limits = as.Date(c('2023-01-01', '2024-12-01')),
+    date_breaks = '3 months', date_labels = '%b %Y',
+    expand = expansion(mult = 0.001)) +
+  labs(x = 'Month', y = 'Crash Count') +
+  coord_cartesian(ylim = c(0, 25)) +
+  theme_minimal() +
+  theme(legend.position = 'none')
+```
+
+```{r}
+data_3246 <- dated_data %>%
+  filter(GRID_ID == 3246)
+```
+
+```{r}
+ggplot(data_3246, aes(x = YearMonth, y = Predicted_Crashes, color = Model)) +
+  geom_line(size = 1.5) +
+  scale_color_manual(values = c('#DCAB6B', '#B48291', '#A5CCD1', '#495159')) +
+  scale_x_date(
+    limits = as.Date(c('2023-01-01', '2024-12-01')),
+    date_breaks = '3 months', date_labels = '%b %Y',
+    expand = expansion(mult = 0.001)) +
+  labs(x = 'Month', y = 'Crash Count') +
+  coord_cartesian(ylim = c(0, 25)) +
+  theme_minimal() +
+  theme(legend.position = 'none')
+```
+
+```{r}
+data_1695 <- dated_data %>%
+  filter(GRID_ID == 1695)
+```
+
+```{r}
+ggplot(data_1695, aes(x = YearMonth, y = Predicted_Crashes, color = Model)) +
+  geom_line(size = 1.5) +
+  scale_color_manual(values = c('#DCAB6B', '#B48291', '#A5CCD1', '#495159')) +
+  scale_x_date(
+    limits = as.Date(c('2023-01-01', '2024-12-01')),
+    date_breaks = '3 months', date_labels = '%b %Y',
+    expand = expansion(mult = 0.001)) +
+  labs(x = 'Month', y = 'Crash Count') +
+  coord_cartesian(ylim = c(0, 25)) +
+  theme_minimal() +
+  theme(legend.position = 'none')
+```
+
+```{r}
+ggplot(data_1695, aes(x = YearMonth, y = Predicted_Crashes, color = Model)) +
+  geom_line(size = 1) +
+  scale_color_manual(values = c('#DCAB6B', '#B48291', '#A5CCD1', '#495159')) +
+  scale_x_date(
+    limits = as.Date(c('2023-01-01', '2024-12-01')),
+    date_breaks = '3 months', date_labels = '%b %Y',
+    expand = expansion(mult = 0.001)) +
+  labs(x = 'Month', y = 'Crash Count') +
+  coord_cartesian(ylim = c(0, 25)) +
+  theme_minimal()
+```
+
+```{r}
+write.csv(data_1695, 'data_1695.csv')
+write.csv(data_1957, 'data_1957.csv')
+write.csv(data_2033, 'data_2033.csv')
+write.csv(data_3246, 'data_3246.csv')
+write.csv(data_5235, 'data_5235.csv')
+```
